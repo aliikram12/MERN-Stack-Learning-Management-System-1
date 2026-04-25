@@ -2,6 +2,9 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const dotenv = require('dotenv');
+const helmet = require('helmet');
+const compression = require('compression');
+const path = require('path');
 const connectDB = require('./config/db');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -14,6 +17,14 @@ connectDB();
 const app = express();
 
 // ------ Middleware ------
+
+// Security Headers
+app.use(helmet({
+  contentSecurityPolicy: false, // Disable CSP for easier development/deployment, enable if needed
+}));
+
+// Compression
+app.use(compression());
 
 // CORS — allow frontend to communicate with backend
 app.use(
@@ -32,7 +43,7 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
-// ------ Routes ------
+// ------ API Routes ------
 
 // API health check
 app.get('/api/health', (req, res) => {
@@ -43,8 +54,12 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Root route
+app.get('/api', (req, res) => {
+  res.send('Api is Running');
+});
+
 // Static folder for uploads
-const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // Mount route files
@@ -54,6 +69,22 @@ app.use('/api/courses', require('./routes/courseRoutes'));
 app.use('/api/enroll', require('./routes/enrollmentRoutes'));
 app.use('/api/upload', require('./routes/uploadRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
+
+// ------ Deployment ------
+
+if (process.env.NODE_ENV === 'production') {
+  // Set static folder
+  const frontendBuildPath = path.join(__dirname, '../frontend/dist');
+  app.use(express.static(frontendBuildPath));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.resolve(__dirname, '../frontend', 'dist', 'index.html'));
+  });
+} else {
+  app.get('/', (req, res) => {
+    res.send('API is running in development mode...');
+  });
+}
 
 // ------ Error Handler ------
 app.use(errorHandler);
