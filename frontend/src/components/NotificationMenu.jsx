@@ -8,12 +8,6 @@ const NotificationMenu = () => {
   const [show, setShow] = useState(false);
   const unreadCount = (notifications || []).filter(n => !n.isRead).length;
 
-  useEffect(() => {
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 60000); // Refresh every minute
-    return () => clearInterval(interval);
-  }, []);
-
   const fetchNotifications = async () => {
     try {
       const res = await API.get('/notifications');
@@ -22,6 +16,12 @@ const NotificationMenu = () => {
       console.error(err);
     }
   };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000); // Refresh every minute
+    return () => clearInterval(interval);
+  }, []);
 
   const markAsRead = async (id) => {
     try {

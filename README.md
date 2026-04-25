@@ -212,16 +212,74 @@ After running `npm run seed`:
 
 ## 🚢 Deployment
 
+### Vercel Deployment (Recommended)
+
+#### Prerequisites
+- Vercel account
+- MongoDB Atlas database
+- GitHub repository
+
+#### 1. Backend Deployment
+1. **Create Backend Project on Vercel**
+   - Go to [vercel.com](https://vercel.com)
+   - Click "New Project"
+   - Import your GitHub repository
+   - Set project name (e.g., `lms-backend`)
+   - Configure root directory: `backend`
+
+2. **Environment Variables**
+   Set these in Vercel dashboard:
+   ```
+   NODE_ENV=production
+   MONGO_URI=your_mongodb_atlas_connection_string
+   JWT_SECRET=your_super_secret_jwt_key
+   JWT_EXPIRE=30d
+   CLIENT_URL=https://your-frontend-domain.vercel.app
+   ```
+
+3. **Deploy**
+   - Vercel automatically detects Node.js project
+   - Uses `vercel.json` for serverless configuration
+   - Backend will be available at `https://your-backend-project.vercel.app`
+
+#### 2. Frontend Deployment
+1. **Create Frontend Project on Vercel**
+   - Click "New Project" again
+   - Select same GitHub repository
+   - Set project name (e.g., `lms-frontend`)
+   - Configure root directory: `frontend`
+
+2. **Environment Variables**
+   ```
+   VITE_API_URL=https://your-backend-project.vercel.app
+   ```
+
+3. **Build Settings**
+   - Framework Preset: `Vite`
+   - Build Command: `npm run build`
+   - Output Directory: `dist`
+   - Install Command: `npm install`
+
+4. **Deploy**
+   - Frontend will be available at `https://your-frontend-project.vercel.app`
+
+#### 3. Database Setup
+- Create MongoDB Atlas cluster
+- Whitelist Vercel's IP addresses (0.0.0.0/0 for development)
+- Get connection string and update `MONGO_URI`
+
+#### Alternative: Other Platforms
+
 ### Backend (Render / Railway)
 1. Push code to GitHub
 2. Connect repo to Render/Railway
 3. Set environment variables
 4. Deploy with `npm start`
 
-### Frontend (Vercel / Netlify)
+### Frontend (Netlify)
 1. Set build command: `npm run build`
 2. Set output directory: `dist`
-3. Add environment variable for API URL
+3. Add environment variable: `VITE_API_URL=https://your-backend-url`
 
 ### Database
 - Use MongoDB Atlas for production database

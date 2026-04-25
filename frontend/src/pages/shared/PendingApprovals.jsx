@@ -9,10 +9,6 @@ const PendingApprovals = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(null);
 
-  useEffect(() => {
-    fetchPending();
-  }, []);
-
   const fetchPending = async () => {
     try {
       const res = await enrollmentService.getPendingEnrollments();
@@ -23,6 +19,10 @@ const PendingApprovals = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchPending();
+  }, []);
 
   const handleStatusUpdate = async (id, status) => {
     setProcessing(id);
