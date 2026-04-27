@@ -29,7 +29,7 @@ app.use(compression());
 // CORS — allow frontend to communicate with backend
 app.use(
   cors({
-    origin: process.env.CLIENT_URL || 'http://localhost:5173',
+    origin: process.env.CLIENT_URL || "*",
     credentials: true,
   })
 );
@@ -72,19 +72,9 @@ app.use('/api/notifications', require('./routes/notificationRoutes'));
 
 // ------ Deployment ------
 
-if (process.env.NODE_ENV === 'production') {
-  // Set static folder
-  const frontendBuildPath = path.join(__dirname, '../frontend/dist');
-  app.use(express.static(frontendBuildPath));
-
-  app.get('*', (req, res) => {
-    res.sendFile(path.resolve(__dirname, '../frontend', 'dist', 'index.html'));
-  });
-} else {
-  app.get('/', (req, res) => {
-    res.send('API is running in development mode...');
-  });
-}
+app.get('/', (req, res) => {
+  res.send('LMS Backend API is running...');
+});
 
 // ------ Error Handler ------
 app.use(errorHandler);
@@ -92,20 +82,15 @@ app.use(errorHandler);
 // ------ Start Server ------
 const PORT = process.env.PORT || 5000;
 
-// For Vercel serverless deployment
-if (process.env.VERCEL) {
-  module.exports = app;
-} else {
-  // For local development
-  const server = app.listen(PORT, () => {
-    console.log(`🚀 Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-  });
+// Start server
+const server = app.listen(PORT, () => {
+  console.log(`🚀 LMS Backend API running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+});
 
-  // Handle unhandled promise rejections
-  process.on('unhandledRejection', (err) => {
-    console.error(`❌ Unhandled Rejection: ${err.message}`);
-    server.close(() => process.exit(1));
-  });
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error(`❌ Unhandled Rejection: ${err.message}`);
+  server.close(() => process.exit(1));
+});
 
-  module.exports = app;
-}
+module.exports = app;
