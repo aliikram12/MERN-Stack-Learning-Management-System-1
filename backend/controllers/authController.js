@@ -8,6 +8,7 @@ const generateToken = require('../utils/generateToken');
  */
 const register = async (req, res, next) => {
   try {
+    console.log('📝 Register request received:', { name: req.body.name, email: req.body.email, role: req.body.role });
     const { name, email, password, role } = req.body;
 
     // Check if user already exists
@@ -34,6 +35,7 @@ const register = async (req, res, next) => {
     // Generate token
     const token = generateToken(user._id);
 
+    console.log('✅ User registered successfully:', { id: user._id, name: user.name, email: user.email, role: user.role });
     res.status(201).json({
       success: true,
       data: {
@@ -45,6 +47,7 @@ const register = async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.log('❌ Register error:', error.message);
     next(error);
   }
 };
@@ -56,6 +59,7 @@ const register = async (req, res, next) => {
  */
 const login = async (req, res, next) => {
   try {
+    console.log('🔑 Login request received for email:', req.body.email);
     const { email, password } = req.body;
 
     // Validate email and password
@@ -89,6 +93,7 @@ const login = async (req, res, next) => {
     // Generate token
     const token = generateToken(user._id);
 
+    console.log('✅ Login successful for user:', { id: user._id, name: user.name, email: user.email, role: user.role });
     res.status(200).json({
       success: true,
       data: {
@@ -102,6 +107,7 @@ const login = async (req, res, next) => {
       },
     });
   } catch (error) {
+    console.log('❌ Login error:', error.message);
     next(error);
   }
 };

@@ -5,13 +5,27 @@ import API from './api';
  */
 const authService = {
   register: async (userData) => {
-    const response = await API.post('/auth/register', userData);
-    return response.data;
+    console.log('📤 Frontend: Sending register request to /api/auth/register', userData);
+    try {
+      const response = await API.post('/auth/register', userData);
+      console.log('✅ Frontend: Register response received:', response.data);
+      return response.data;
+    } catch (error) {
+      console.log('❌ Frontend: Register request failed:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   login: async (credentials) => {
-    const response = await API.post('/auth/login', credentials);
-    return response.data;
+    console.log('📤 Frontend: Sending login request to /api/auth/login', { email: credentials.email });
+    try {
+      const response = await API.post('/auth/login', credentials);
+      console.log('✅ Frontend: Login response received:', response.data);
+      return response.data;
+    } catch (error) {
+      console.log('❌ Frontend: Login request failed:', error.response?.data || error.message);
+      throw error;
+    }
   },
 
   getMe: async () => {
