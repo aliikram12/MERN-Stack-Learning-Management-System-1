@@ -9,6 +9,7 @@ import './Courses.css';
 const Courses = () => {
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
   const [level, setLevel] = useState('');
@@ -22,6 +23,7 @@ const Courses = () => {
 
   const fetchCourses = async (page = 1) => {
     setLoading(true);
+    setError(null);
     try {
       const params = { page, limit: 9 };
       if (search) params.search = search;
@@ -30,10 +32,19 @@ const Courses = () => {
       if (sort) params.sort = sort;
 
       const res = await courseService.getCourses(params);
-      setCourses(res.data);
-      setPagination(res.pagination);
+
+      // Validate response structure
+      if (res && res.success !== false) {
+        setCourses(res.data || []);
+        setPagination(res.pagination || { page: 1, pages: 1, total: 0 });
+      } else {
+        throw new Error(res?.message || 'Failed to fetch courses');
+      }
     } catch (error) {
       console.error('Failed to fetch courses:', error);
+      setError(error.message || 'Failed to load courses. Please try again.');
+      setCourses([]);
+      setPagination({ page: 1, pages: 1, total: 0 });
     } finally {
       setLoading(false);
     }
@@ -54,7 +65,7 @@ const Courses = () => {
       <div className="container">
         <div className="page-header animate-fadeIn">
           <h1>Explore Courses</h1>
-          <p>Discover {pagination.total} courses to advance your skills</p>
+          <p>Discover {pagination?.total || 0} courses to advance your skills</p>
         </div>
 
         {/* Filters */}
@@ -91,7 +102,16 @@ const Courses = () => {
         {/* Course Grid */}
         {loading ? (
           <Loader text="Loading courses..." />
-        ) : courses.length === 0 ? (
+        ) : error ? (
+          <div className="empty-state animate-fadeIn">
+            <div className="empty-state-icon">❌</div>
+            <h3>Error Loading Courses</h3>
+            <p>{error}</p>
+            <button className="btn btn-primary" onClick={() => fetchCourses(1)}>
+              Try Again
+            </button>
+          </div>
+        ) : (courses?.length || 0) === 0 ? (
           <div className="empty-state animate-fadeIn">
             <div className="empty-state-icon">📚</div>
             <h3>No courses found</h3>
@@ -100,29 +120,29 @@ const Courses = () => {
         ) : (
           <>
             <div className="courses-grid">
-              {courses.map((course, index) => (
-                <CourseCard key={course._id} course={course} index={index} />
+              {(courses || []).map((course, index) => (
+                <CourseCard key={course?._id || index} course={course} index={index} />
               ))}
             </div>
 
             {/* Pagination */}
-            {pagination.pages > 1 && (
+            {(pagination?.pages || 1) > 1 && (
               <div className="pagination">
                 <button className="pagination-btn"
-                  disabled={pagination.page === 1}
-                  onClick={() => fetchCourses(pagination.page - 1)}>
+                  disabled={(pagination?.page || 1) === 1}
+                  onClick={() => fetchCourses((pagination?.page || 1) - 1)}>
                   ← Prev
                 </button>
-                {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
+                {Array.from({ length: pagination?.pages || 1 }, (_, i) => i + 1).map((page) => (
                   <button key={page}
-                    className={`pagination-btn ${pagination.page === page ? 'active' : ''}`}
+                    className={`pagination-btn ${(pagination?.page || 1) === page ? 'active' : ''}`}
                     onClick={() => fetchCourses(page)}>
                     {page}
                   </button>
                 ))}
                 <button className="pagination-btn"
-                  disabled={pagination.page === pagination.pages}
-                  onClick={() => fetchCourses(pagination.page + 1)}>
+                  disabled={(pagination?.page || 1) === (pagination?.pages || 1)}
+                  onClick={() => fetchCourses((pagination?.page || 1) + 1)}>
                   Next →
                 </button>
               </div>

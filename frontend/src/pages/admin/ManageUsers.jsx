@@ -8,21 +8,32 @@ import '../Dashboard.css';
 const ManageUsers = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
   const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
 
   const fetchUsers = async (page = 1) => {
     setLoading(true);
+    setError(null);
     try {
       const params = { page, limit: 10 };
       if (search) params.search = search;
       if (roleFilter) params.role = roleFilter;
       const res = await userService.getUsers(params);
-      setUsers(res.data);
-      setPagination(res.pagination);
+
+      // Validate response structure
+      if (res && res.success !== false) {
+        setUsers(res.data || []);
+        setPagination(res.pagination || { page: 1, pages: 1, total: 0 });
+      } else {
+        throw new Error(res?.message || 'Failed to fetch users');
+      }
     } catch (error) {
       console.error('Failed to fetch users:', error);
+      setError(error.message || 'Failed to load users. Please try again.');
+      setUsers([]);
+      setPagination({ page: 1, pages: 1, total: 0 });
     } finally {
       setLoading(false);
     }
@@ -52,7 +63,7 @@ const ManageUsers = () => {
     <div className="dashboard-page-content">
       <div className="page-header">
         <h1>Manage Users</h1>
-        <p>{pagination.total} total users</p>
+        <p>{pagination?.total || 0} total users</p>
       </div>
 
       <div className="toolbar animate-fadeIn">
@@ -72,6 +83,21 @@ const ManageUsers = () => {
 
       {loading ? (
         <Loader size="small" />
+      ) : error ? (
+        <div className="empty-state animate-fadeIn">
+          <div className="empty-state-icon">❌</div>
+          <h3>Error Loading Users</h3>
+          <p>{error}</p>
+          <button className="btn btn-primary" onClick={() => fetchUsers(1)}>
+            Try Again
+          </button>
+        </div>
+      ) : (users?.length || 0) === 0 ? (
+        <div className="empty-state animate-fadeIn">
+          <div className="empty-state-icon">👥</div>
+          <h3>No users found</h3>
+          <p>No users match your current search or filters.</p>
+        </div>
       ) : (
         <div className="table-container animate-fadeIn">
           <table className="table">
@@ -85,21 +111,23 @@ const ManageUsers = () => {
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
-                <tr key={u._id}>
+              {(users || []).map((u) => (
+                <tr key={u?._id}>
                   <td>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <div className="user-avatar" style={{ width: '36px', height: '36px', fontSize: '14px' }}>
-                        {u.name?.charAt(0).toUpperCase()}
+                        {u?.name?.charAt(0).toUpperCase() || '?'}
                       </div>
-                      {u.name}
+                      {u?.name || 'Unknown User'}
                     </div>
                   </td>
-                  <td style={{ color: 'var(--text-muted)' }}>{u.email}</td>
-                  <td><span className={`badge badge-${roleColors[u.role]}`}>{u.role}</span></td>
-                  <td style={{ color: 'var(--text-muted)' }}>{new Date(u.createdAt).toLocaleDateString()}</td>
+                  <td style={{ color: 'var(--text-muted)' }}>{u?.email || 'N/A'}</td>
+                  <td><span className={`badge badge-${roleColors[u?.role] || 'info'}`}>{u?.role || 'unknown'}</span></td>
+                  <td style={{ color: 'var(--text-muted)' }}>
+                    {u?.createdAt ? new Date(u.createdAt).toLocaleDateString() : 'N/A'}
+                  </td>
                   <td>
-                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u._id, u.name)}>
+                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(u?._id, u?.name)}>
                       <FiTrash2 />
                     </button>
                   </td>
@@ -110,10 +138,10 @@ const ManageUsers = () => {
         </div>
       )}
 
-      {pagination.pages > 1 && (
+      {(pagination?.pages || 1) > 1 && (
         <div className="pagination">
-          {Array.from({ length: pagination.pages }, (_, i) => i + 1).map((page) => (
-            <button key={page} className={`pagination-btn ${pagination.page === page ? 'active' : ''}`}
+          {Array.from({ length: pagination?.pages || 1 }, (_, i) => i + 1).map((page) => (
+            <button key={page} className={`pagination-btn ${(pagination?.page || 1) === page ? 'active' : ''}`}
               onClick={() => fetchUsers(page)}>{page}</button>
           ))}
         </div>
