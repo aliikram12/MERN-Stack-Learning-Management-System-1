@@ -19,7 +19,7 @@ export const AuthProvider = ({ children }) => {
         try {
           const res = await authService.getMe();
           setUser(res.data);
-        } catch (error) {
+        } catch {
           // Token expired or invalid
           localStorage.removeItem('lms_token');
           localStorage.removeItem('lms_user');
